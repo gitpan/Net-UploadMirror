@@ -1,0 +1,6 @@
+Revision history for Perl extension Net::UploadMirror.
+
+0.01  Sat Dec 31 17:33:47 2005
+	- original version; created by h2xs 1.23 with options
+		-XAn Net::UploadMirror
+
