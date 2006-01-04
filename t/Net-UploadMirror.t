@@ -5,7 +5,8 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 37; # "no_plan"; # tests => 1;
+# use Test::More "no_plan";
+ use Test::More tests => 47;
 BEGIN { use_ok('Net::UploadMirror') };
 
 #########################
@@ -17,7 +18,7 @@ BEGIN { use_ok('Net::UploadMirror') };
  	localdir		=> "TestA",
  	remotedir	=> "TestA",
  	ftpserver		=> "www.net.de",
- 	usr		=> 'e-mail@address.de',
+ 	usr		=> 'e-mail@addresse.de',
  	pass		=> "xyz", 	
  	);
  isa_ok($mirror, "Net::UploadMirror");
@@ -61,10 +62,18 @@ BEGIN { use_ok('Net::UploadMirror') };
  ok("TestA/TestB/TestC/Dir6" eq $ref_deleted_dirs->[0]);
  can_ok($mirror, "CheckIfModified");
  ok(my $ref_modified_files = $mirror->CheckIfModified($ref_local_files)); 	
+ ok($mirror->SetConnection(1));
  can_ok($mirror, "StoreFiles");
+ ok($mirror->StoreFiles([])); 
  can_ok($mirror, "MakeDirs");
+ ok($mirror->MakeDirs());
+ ok($mirror->SetDelete("enable"));
  can_ok($mirror, "DeleteFiles");
+ ok($mirror->DeleteFiles([]));
  can_ok($mirror, "DeleteDirs");
+ ok($mirror->DeleteDirs([]));
+ ok($mirror->SetConnection(undef));
+ ok($mirror->SetDelete("disabled"));
  ok($mirror->set_Item());
  ok($mirror->get_Item());
  ok($mirror->GETItem());
@@ -72,12 +81,14 @@ BEGIN { use_ok('Net::UploadMirror') };
  ok($mirror->SET____Remotedir("Homepage"));
  ok($mirror->WrongFunction());
  ok($mirror->SetDebug(1));
- ok($mirror->GetDelete());
  ok($mirror->SetFtpServer("home.perl.de"));
  ok(my $server = $mirror->GetFtpServer());
  ok($server eq "home.perl.de");
  ok(my $delete = $mirror->GetDelete());
  ok($delete eq "disabled");
+ ok($mirror->Set_Delete("enable"));
+ ok($delete = $mirror->get_delete());
+ ok($delete eq "enable");
 
 
 

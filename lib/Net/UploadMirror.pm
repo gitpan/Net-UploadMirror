@@ -29,7 +29,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 # Preloaded methods go here.
@@ -91,7 +91,7 @@ our $VERSION = '0.01';
  sub Update
  	{
  	my ($self) = @_;
- 	$self->Connect() if(!($self->{_connection}));
+ 	$self->Connect() if(!(defined($self->{_connection})));
  	my ($ref_local_files, $ref_local_dirs) = $self->ReadLocalDir();
  	if($self->{_debug})
  		{
@@ -239,9 +239,9 @@ our $VERSION = '0.01';
  	{
  	my ($self, $ref_local_files) = @_;
  	my (@modified_files, $ref_last_modified);
- 	if(-f "lastmodified")
+ 	if(-f "lastmodified_local")
  		{
- 		$ref_last_modified = retrieve("lastmodified");
+ 		$ref_last_modified = retrieve("lastmodified_local");
  		}
  	else
  		{
@@ -251,11 +251,17 @@ our $VERSION = '0.01';
  	for(keys(%{$ref_local_files}))
  		{
  		next if((-d $_) || !(-f $_));
- 		if(!($ref_last_modified->{$_} eq (stat($_))[9]) || 
- 			!(defined($ref_last_modified->{$_})))
+ 		if(defined($ref_last_modified->{$_}))
  			{
- 			push(@modified_files, $_);
+ 			if(!($ref_last_modified->{$_} eq (stat($_))[9]))
+ 				{
+ 				push(@modified_files, $_);
+ 				}
  			}
+ 		else
+ 		 	{
+ 		 	push(@modified_files, $_);
+ 		 	}
  		}
  	return \@modified_files;
  	}
@@ -265,9 +271,9 @@ sub StoreFiles
  	my ($self, $ref_files) = @_;
  	my ($l_path, $r_path, $ref_last_modified);
  	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified")
+ 	if(-f "lastmodified_local")
  		{
- 		$ref_last_modified = retrieve("lastmodified");
+ 		$ref_last_modified = retrieve("lastmodified_local");
  		}
  	else
  		{
@@ -294,7 +300,7 @@ sub StoreFiles
  			warn("error in StoreFiles() : $l_path is not a file\n");
  			}
  		}
- 	store($ref_last_modified, "lastmodified");
+ 	store($ref_last_modified, "lastmodified_local");
  	return 1;
  	}
 #-------------------------------------------------
@@ -327,9 +333,9 @@ sub StoreFiles
  	my ($l_path, $ref_last_modified);
  	return if(!($self->{_delete} eq "enable"));
  	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified")
+ 	if(-f "lastmodified_local")
  		{ 
- 		$ref_last_modified = retrieve("lastmodified");
+ 		$ref_last_modified = retrieve("lastmodified_local");
  		}
  	else
  		{
@@ -342,7 +348,7 @@ sub StoreFiles
  		$self->{_connection}->delete($_);
  		delete($ref_last_modified->{$l_path}) if(defined($ref_last_modified->{$l_path}));
  		}
- 	store($ref_last_modified, "lastmodified");
+ 	store($ref_last_modified, "lastmodified_local");
  	return 1;
  	}
 #-------------------------------------------------
@@ -367,7 +373,7 @@ sub StoreFiles
  			{
  			*{$AUTOLOAD} = sub
  				{
- 				return $self->{$attr};
+ 				return $_[0]->{$attr};
  				};
  			return $self->{$attr};
  			}
@@ -384,7 +390,8 @@ sub StoreFiles
  			{
  			*{$AUTOLOAD} = sub
  				{
- 				$self->{$attr} = $value;
+ 				$_[0]->{$attr} = $_[1];
+ 				return 1;
  				};
  			$self->{$attr} = $value;
  			return 1;
