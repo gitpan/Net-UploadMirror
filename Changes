@@ -10,4 +10,13 @@ Revision history for Perl extension Net::UploadMirror.
  	- add more tests
  	- change filename lastmodified in lastmodified_local
 
+0.03 Fri Jan 6 12:26:29 2006
+ 	- function CheckIfNew() renamed to LocalNotInRemote()
+ 	- function CheckIfDeleted() renamed to RemoteNotInLocal()
+ 	- function DeleteDirs() renamed to RemoveDirs()
+ 	- functions new(), Connect(), Quit(), LocalNotInRemote(), RemoteNotInLocal(),
+ 	ReadLocalDir(), ReadRemoteDir, moved to baseclass Net::MirrorDir
+ 	- add more tests
+ 	- some bugfix 
+
 

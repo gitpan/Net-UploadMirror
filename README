@@ -1,5 +1,6 @@
-Net-UploadMirror version 0.01
+Net-UploadMirror version 0.03
 =============================
+
 This module is for mirroring a local directory to a remote location via FTP.
 For example websites, documentations or developmentstuff which ones were
 worked on locally. It is not developt for mirroring large archivs.
@@ -18,10 +19,9 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
- 	Net::FTP
+ 	Net::MirrorDir
  	Storable
  	File::Basename
-They should be standard.
 
 COPYRIGHT AND LICENCE
 
