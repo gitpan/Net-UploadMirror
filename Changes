@@ -19,4 +19,11 @@ Revision history for Perl extension Net::UploadMirror.
  	- add more tests
  	- some bugfix 
 
+0.04 Fri Jan 13 18:23:45 2006
+ 	- remove Exporter.pm, also in future nothing will be to be exported
+ 	- change our $VERSION in $Net::UploadMirror::VERSION
+ 	- change our @ISA in @Net::UploadMirror
+ 	- bugfix in Net-UploadMirror.t
+
+
 
