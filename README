@@ -1,4 +1,4 @@
-Net-UploadMirror version 0.04
+Net-UploadMirror version 0.05
 =============================
 
 This module is for mirroring a local directory to a remote location via FTP.

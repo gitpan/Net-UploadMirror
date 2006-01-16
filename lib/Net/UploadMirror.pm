@@ -13,7 +13,7 @@ package Net::UploadMirror;
  use vars '$AUTOLOAD';
 #------------------------------------------------
  @Net::UploadMirror::ISA = qw(Exporter Net::MirrorDir);
- $Net::UploadMirror::VERSION = '0.04';
+ $Net::UploadMirror::VERSION = '0.05';
 #-------------------------------------------------
  sub Update
  	{
