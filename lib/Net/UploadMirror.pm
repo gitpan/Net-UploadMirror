@@ -12,8 +12,8 @@ package Net::UploadMirror;
  use File::Basename;
  use vars '$AUTOLOAD';
 #------------------------------------------------
- @Net::UploadMirror::ISA = qw(Exporter Net::MirrorDir);
- $Net::UploadMirror::VERSION = '0.05';
+ @Net::UploadMirror::ISA = qw(Net::MirrorDir);
+ $Net::UploadMirror::VERSION = '0.06';
 #-------------------------------------------------
  sub Update
  	{
@@ -277,6 +277,12 @@ server set this attribute to "enable", default "disabled"
 =item connection
 takes a Net::FTP-object you should not use that,
 it is produced automatically by the UploadMirror-object
+Following functions of the used FTP-object should be identical
+to the Net::FTP-object functions.
+ 	cwd(path), 
+ 	size(file), 
+ 	mdtm(file), 
+ 	ls(path),
 
 =item exclusions
 a reference to a list of strings interpreted as regular-expressios ("regex") 
@@ -364,7 +370,7 @@ Maybe you'll find some. Let me know.
 
 =head1 AUTHOR
 
-Torsten Knorr, E<lt>knorrcpan@tiscali.deE<gt>
+Torsten Knorr, E<lt>torstenknorr@tiscali.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -376,6 +382,8 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+
+
 
 
 

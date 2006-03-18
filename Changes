@@ -1,14 +1,16 @@
 Revision history for Perl extension Net::UploadMirror.
 
-0.01  Sat Dec 31 17:33:47 2005
-	- original version; created by h2xs 1.23 with options
-		-XAn Net::UploadMirror
-		
-0.02 Wed Jan 4 21:33:01 2006
- 	- bugfix in AUTOLOAD()
- 	- bugfix in CheckIfModified()
- 	- add more tests
- 	- change filename lastmodified in lastmodified_local
+0.06 Sat Mar 18 20:17:12 2006
+ 	- bugfix in Makefile.PL
+
+0.05 Mon Jan 16 19:34:23 2006
+ 	- remove "use 5.009002;" in Makefile.PL
+
+0.04 Fri Jan 13 18:23:45 2006
+ 	- remove Exporter.pm, also in future nothing will be to be exported
+ 	- change our $VERSION in $Net::UploadMirror::VERSION
+ 	- change our @ISA in @Net::UploadMirror
+ 	- bugfix in Net-UploadMirror.t
 
 0.03 Fri Jan 6 12:26:29 2006
  	- function CheckIfNew() renamed to LocalNotInRemote()
@@ -19,14 +21,25 @@ Revision history for Perl extension Net::UploadMirror.
  	- add more tests
  	- some bugfix 
 
-0.04 Fri Jan 13 18:23:45 2006
- 	- remove Exporter.pm, also in future nothing will be to be exported
- 	- change our $VERSION in $Net::UploadMirror::VERSION
- 	- change our @ISA in @Net::UploadMirror
- 	- bugfix in Net-UploadMirror.t
+0.02 Wed Jan 4 21:33:01 2006
+ 	- bugfix in AUTOLOAD()
+ 	- bugfix in CheckIfModified()
+ 	- add more tests
+ 	- change filename lastmodified in lastmodified_local
 
-0.05 Mon Jan 16 19:34:23 2006
- 	- remove "use 5.009002;" in Makefile.PL
+0.01  Sat Dec 31 17:33:47 2005
+	- original version; created by h2xs 1.23 with options
+		-XAn Net::UploadMirror
+		
+
+
+
+
+
+
+
+
+
 
 
 
