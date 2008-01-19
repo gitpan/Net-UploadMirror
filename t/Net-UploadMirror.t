@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 # use Test::More "no_plan";
- use Test::More tests => 30;
+ use Test::More tests => 32;
 BEGIN { use_ok('Net::UploadMirror') };
 
 #########################
@@ -40,7 +40,8 @@ BEGIN { use_ok('Net::UploadMirror') };
 # now we test the Net::UploadMirror methods
  isa_ok($mirror, "Net::UploadMirror");
  can_ok($mirror, "Update");
-
+ can_ok($mirror, "_Init");
+ ok($mirror->_Init());
  can_ok($mirror, "StoreFiles");
  can_ok($mirror, "MakeDirs");
  can_ok($mirror, "DeleteFiles");
@@ -58,6 +59,7 @@ BEGIN { use_ok('Net::UploadMirror') };
  can_ok($mirror, "CheckIfModified");
  ok($mirror->CheckIfModified({}));
 #-------------------------------------------------
+
 
 
 

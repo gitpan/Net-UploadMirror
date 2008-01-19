@@ -12,7 +12,25 @@ package Net::UploadMirror;
  use vars '$AUTOLOAD';
 #------------------------------------------------
  @Net::UploadMirror::ISA = qw(Net::MirrorDir);
- $Net::UploadMirror::VERSION = '0.07';
+ $Net::UploadMirror::VERSION = '0.08';
+#-------------------------------------------------
+ sub _Init
+ 	{
+ 	my ($self, %arg) = @_;
+ 	$self->{_file_name} = $arg{file_name} || "lastmodified_local";
+ 	if(-f $self->{_file_name})
+ 		{
+ 		$self->{_last_modified} = retrieve($self->{_file_name});
+ 		}
+ 	else
+ 		{
+ 		$self->{_last_modified} = {};
+ 		store($self->{_last_modified}, $self->{_file_name});
+ 		warn("\nno information of the files last modified times\n");
+ 		return(0);
+ 		}
+ 	return(1);
+ 	}
 #-------------------------------------------------
  sub Update
  	{
@@ -69,53 +87,30 @@ package Net::UploadMirror;
  		}
  	$self->StoreFiles($ref_a_modified_local_files) if(@{$ref_a_modified_local_files});
  	$self->Quit();
- 	return 1;
+ 	return(1);
  	}
 #-------------------------------------------------
  sub CheckIfModified
  	{
  	my ($self, $ref_h_local_files) = @_;
  	my (@modified_files, $ref_h_last_modified);
- 	if(-f "lastmodified_local")
- 		{
- 		$ref_h_last_modified = retrieve("lastmodified_local");
- 		}
- 	else
- 		{
- 		warn("no information of the last modified time");
- 		return [keys(%{$ref_h_local_files})];
- 		}
  	for(keys(%{$ref_h_local_files}))
  		{
  		next if((-d $_) || !(-f $_));
- 		if(defined($ref_h_last_modified->{$_}))
+ 		if(defined($self->{_last_modified}{$_}))
  			{
- 			if(!($ref_h_last_modified->{$_} eq (stat($_))[9]))
- 				{
- 				push(@modified_files, $_);
- 				}
+ 			next if($self->{_last_modified}{$_} eq (stat($_))[9]);
  			}
- 		else
- 		 	{
- 		 	push(@modified_files, $_);
- 		 	}
+ 		 push(@modified_files, $_);
  		}
- 	return \@modified_files;
+ 	return(\@modified_files);
  	}
 #-------------------------------------------------
 sub StoreFiles
  	{
  	my ($self, $ref_a_files) = @_;
  	my ($l_path, $r_path, $ref_h_last_modified);
- 	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified_local")
- 		{
- 		$ref_h_last_modified = retrieve("lastmodified_local");
- 		}
- 	else
- 		{
- 		$ref_h_last_modified = {};
- 		}
+ 	return(0) if(!(defined($self->{_connection})));
  	for(@{$ref_a_files})
  		{
  		if(-f $_)
@@ -129,7 +124,7 @@ sub StoreFiles
  				$self->{_connection}->mkdir($r_dir, 1);
  				$self->{_connection}->cwd($r_dir);
  				}
- $ref_h_last_modified->{$l_path} = (stat($l_path))[9] if($self->{_connection}->put($l_path, $r_name));
+ $self->{_last_modified}{$l_path} = (stat($l_path))[9] if($self->{_connection}->put($l_path, $r_name));
  			$self->{_connection}->cwd();
  			}
  		else
@@ -137,15 +132,15 @@ sub StoreFiles
  			warn("error in StoreFiles() : $l_path is not a file\n");
  			}
  		}
- 	store($ref_h_last_modified, "lastmodified_local");
- 	return 1;
+ 	store($self->{_last_modified}, $self->{_file_name});
+ 	return(1);
  	}
 #-------------------------------------------------
  sub MakeDirs
  	{
  	my ($self, $ref_a_dirs) = @_;
  	my ($l_dir, $r_dir);
- 	return if(!(defined($self->{_connection})));
+ 	return(0) if(!(defined($self->{_connection})));
  	for(@{$ref_a_dirs})
  		{
  		if(-d $_)
@@ -161,41 +156,33 @@ sub StoreFiles
 			warn("error in MakeDirs() : $l_dir is not a directory\n");
  			}
  		}
- 	return 1;
+ 	return(1);
  	}
 #-------------------------------------------------
  sub DeleteFiles
  	{
  	my ($self, $ref_a_files) = @_;
  	my ($l_path, $ref_h_last_modified);
- 	return if(!($self->{_delete} eq "enable"));
- 	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified_local")
- 		{ 
- 		$ref_h_last_modified = retrieve("lastmodified_local");
- 		}
- 	else
- 		{
- 		$ref_h_last_modified = {};
- 		}
+ 	return(0) if(!($self->{_delete} eq "enable"));
+ 	return(0) if(!(defined($self->{_connection})));
  	for(@{$ref_a_files})
  		{
  		$l_path = $_; 
  		$l_path =~ s!^$self->{_remotedir}!$self->{_localdir}!;
  		$self->{_connection}->delete($_);
- 		delete($ref_h_last_modified->{$l_path}) if(defined($ref_h_last_modified->{$l_path}));
+ 		delete($self->{_last_modified}{$l_path}) if(defined($self->{_last_modified}{$l_path}));
  		}
- 	store($ref_h_last_modified, "lastmodified_local");
- 	return 1;
+ 	store($self->{_last_modified}, $self->{_file_name});
+ 	return(1);
  	}
 #-------------------------------------------------
  sub RemoveDirs
  	{
  	my ($self, $ref_a_dirs) = @_;
- 	return if(!(defined($self->{_connection})));
- 	return if(!($self->{_delete} eq "enable"));
+ 	return(0) if(!(defined($self->{_connection})));
+ 	return(0) if(!($self->{_delete} eq "enable"));
  	$self->{_connection}->rmdir($_, 1) for(@{$ref_a_dirs});
- 	return 1;
+ 	return(1);
  	}
 #------------------------------------------------
 1;
@@ -217,7 +204,7 @@ Net::UploadMirror - Perl extension for mirroring a local directory via FTP to th
  $um->Update();
  
  or more detailed
- my $md = Net::MirrorDir->new(
+ my $md = Net::UploadMirror->new(
  	ftpserver		=> "my_ftp.hostname.com",
  	usr		=> "my_ftp_usr_name",
  	pass		=> "my_ftp_password",
@@ -237,6 +224,7 @@ Net::UploadMirror - Perl extension for mirroring a local directory via FTP to th
 # or you can use regular expressions
 # 	exclusinos	=> [qr/SYSTEM/i, $regex]
 # 	subset		=> {qr/(?i:HOME)(?i:PAGE)?/, $regex]
+ 	file_name	=> "modified_times"
  	);
  $um->Update();
 
@@ -255,24 +243,34 @@ But there are not in principle any limits.
 
 =head2 methods
 
+=item (1) _Init(%arg)
+ This function is called by the constructor.
+ You do not need to call this function by yourself.
+
 =item (1) Update (void)
-call this function for mirroring automatically, recommended!!!
+ Call this function for mirroring automatically, recommended!!!
 
 =item (ref_hash_modified_files) CheckIfModified (ref_list_local_files)
-Takes a hashreference of local files to compare the last modification stored in a file
-"lastmodified_local" while uploading. Returns a reference of a list.
+ Takes a hashreference of local files to compare the last modification stored in a file
+ "lastmodified_local" while uploading. Returns a reference of a list.
 
 =item (1) StoreFiles (ref_list_paths)
-Takes a listreference of local-paths to upload the files via FTP.
+ Takes a listreference of local-paths to upload the files via FTP.
 
 =item (1) MakeDirs (ref_list_paths)
-Takes a listreference of directorys to make in the remote location.
+ Takes a listreference of directorys to make in the remote location.
 
 =item (1) DeleteFiles (ref_list_paths)
-Takes a listreference of files to delete in the remote location.
+ Takes a listreference of files to delete in the remote location.
 
 =item (1) RemoveDirs (ref_list_paths)
-Takes a listreference of directories to remove in the remote location.
+ Takes a listreference of directories to remove in the remote location.
+
+=head2 optional optiones
+
+=item file_name
+ The name of the file in which the last modified times will be stored.
+ default = "lastmodified_local"
 
 =head2 EXPORT
 
@@ -295,6 +293,10 @@ File::Basename
 
 Maybe you'll find some. Let me know.
 
+=head1 REPORTING BUGS
+
+When reporting bugs/problems please include as much information as possible.
+
 =head1 AUTHOR
 
 Torsten Knorr, E<lt>create-soft@tiscali.deE<gt>
@@ -309,5 +311,7 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+
+
 
 

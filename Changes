@@ -1,8 +1,10 @@
 Revision history for Perl extension Net::UploadMirror.
 
+0.08 Sat Jan 19 19:20:56 2008
+ 	- insert a option for the file name in which the last modified times will be stored
+
 0.07 Fri Jan 18 19:34:07 2008
- 	- some changes in the documentation
- 	- some changes in UploadMirror.t
+ 	- some changes in the documentation and in UploadMirror.t
 
 0.06 Sat Mar 18 20:17:12 2006
  	- bugfix in Makefile.PL
@@ -35,6 +37,7 @@ Revision history for Perl extension Net::UploadMirror.
 	- original version; created by h2xs 1.23 with options
 		-XAn Net::UploadMirror
 		
+
 
 
 
