@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::UploadMirror.
 
+0.10 Sat Mar 29 13:57:38 2008 
+	- skip tests with user prompt, if $ENV{AUTOMATED_TESTING} is true
+ 	- improvement of the function CheckIfModified()
+ 	- code improvements
+
 0.09 Sat Feb  2 18:10:53 2008 
  	- check the connection with the function IsConnection()
  	- insert the function _Init()
@@ -42,6 +47,8 @@ Revision history for Perl extension Net::UploadMirror.
 	- original version; created by h2xs 1.23 with options
 		-XAn Net::UploadMirror
 		
+
+
 
 
 

@@ -99,22 +99,25 @@ BEGIN { use_ok('Net::UploadMirror') };
 #-------------------------------------------------
  SKIP:
  	{
-	print(STDERR "\nWould you like to  test the module with a ftp-server?[y|n]: ");
+	skip("no tests with user prompt\n", 2) if($ENV{AUTOMATED_TESTING});
+ 	my $oldfh = select(STDERR);
+ 	$| = 1;
+	print("\nWould you like to  test the module with a ftp-server?[y|n]: ");
  	my $response = <STDIN>;
  	skip("no tests with ftp-server\n", 2) if(!($response =~ m/^y/i));
- 	print(STDERR "\nPlease enter the hostname of the ftp-server: ");
+ 	print("\nPlease enter the hostname of the ftp-server: ");
  	my $s = <STDIN>;
  	chomp($s);
- 	print(STDERR "\nPlease enter your user name: ");
+ 	print("\nPlease enter your user name: ");
  	my $u = <STDIN>;
  	chomp($u);
- 	print(STDERR "\nPlease enter your password: ");
+ 	print("\nPlease enter your ftp-password: ");
  	my $p = <STDIN>;
  	chomp($p);
-	print(STDERR "\nPlease enter the local-directory: ");
+	print("\nPlease enter the local-directory: ");
  	my $l = <STDIN>;
  	chomp($l);
- 	print(STDERR "\nPease enter the remote-directory: ");
+ 	print("\nPease enter the remote-directory: ");
  	my $r = <STDIN>;
  	chomp($r);
  	ok(my $m = Net::UploadMirror->new(
@@ -123,20 +126,11 @@ BEGIN { use_ok('Net::UploadMirror') };
  		ftpserver		=> $s,
  		usr		=> $u,
  		pass		=> $p,
- 		filename		=> "mtimes" 	
+ 		filename		=> "mtimes",
+ 		timeout		=> 5
  		));
  	ok($m->Update());
- 	};
+ 	select($oldfh);
+ 	}
 #-------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
 

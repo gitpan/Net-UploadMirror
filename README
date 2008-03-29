@@ -1,9 +1,10 @@
-Net-UploadMirror version 0.09
+Net-UploadMirror version 0.10
 =============================
 
 This module is for mirroring a local directory to a remote location via FTP.
 For example websites, documentations or developmentstuff which ones were
-worked on locally. It is not developt for mirroring large archivs.
+worked on locally. Remote files on the ftp-server will be overwritten,
+also in case they are newer. It is not developt for mirroring large archivs.
 But there are not in principle any limits.
 
 INSTALLATION
@@ -19,9 +20,8 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
- 	Net::MirrorDir
+ 	Net::MirrorDir 0.17
  	Storable
- 	File::Basename
 
 COPYRIGHT AND LICENCE
 
@@ -32,6 +32,8 @@ Copyright (C) 2005 - 2008 by Torsten Knorr
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.9.2 or,
 at your option, any later version of Perl 5 you may have available.
+
+
 
 
 

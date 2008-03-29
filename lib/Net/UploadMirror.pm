@@ -25,13 +25,12 @@
 #-------------------------------------------------
  package Net::UploadMirror;
 #-------------------------------------------------
- use Net::MirrorDir;
+ use Net::MirrorDir 0.17;
  use Storable;
- use File::Basename;
  use vars '$AUTOLOAD';
 #------------------------------------------------
  @Net::UploadMirror::ISA = qw(Net::MirrorDir);
- $Net::UploadMirror::VERSION = '0.09';
+ $Net::UploadMirror::VERSION = '0.10';
 #-------------------------------------------------
  sub _Init
  	{
@@ -45,62 +44,51 @@
  sub Update
  	{
  	my ($self) = @_;
- 	my ($ref_h_local_files, $ref_h_local_dirs) = $self->ReadLocalDir();
+ 	return(0) unless($self->Connect());
+ 	my ($rh_lf, $rh_ld) = $self->ReadLocalDir();
  	if($self->{_debug})
  		{
- 		print("local files : $_\n") for(sort keys %{$ref_h_local_files});
- 		print("local dirs : $_\n") for(sort keys %{$ref_h_local_dirs});
+ 		print("local files : $_\n") for(sort keys %{$rh_lf});
+ 		print("local dirs : $_\n") for(sort keys %{$rh_ld});
  		}
- 	my $ref_a_modified_local_files = $self->CheckIfModified($ref_h_local_files);
+ 	my ($rh_rf, $rh_rd) = $self->ReadRemoteDir();
  	if($self->{_debug})
  		{
- 		print("modified files : $_\n") for(@{$ref_a_modified_local_files});
+ 		print("remote files : $_\n") for(sort keys %{$rh_rf});
+ 		print("remote dirs : $_\n") for(sort keys %{$rh_rd});
  		}
- 	return(0) if(!$self->Connect());
-	$self->StoreFiles($ref_a_modified_local_files);
- 	my ($ref_h_remote_files, $ref_h_remote_dirs) = $self->ReadRemoteDir();
+ 	my $ra_ldnir = $self->LocalNotInRemote($rh_ld, $rh_rd);
  	if($self->{_debug})
  		{
- 		print("remote files : $_\n") for(sort keys %{$ref_h_remote_files});
- 		print("remote dirs : $_\n") for(sort keys %{$ref_h_remote_dirs});
+ 		print("local directories not in remote : $_\n") for(@{$ra_ldnir});
  		}
-	my $ref_a_new_local_files = $self->LocalNotInRemote(
- 		$ref_h_local_files,
-		$ref_h_remote_files
-		);
+ 	$self->MakeDirs($ra_ldnir);
+ 	my $ra_lfnir = $self->LocalNotInRemote($rh_lf, $rh_rf);
  	if($self->{_debug})
  		{
- 		print("local files not in remote: $_\n") for(@{$ref_a_new_local_files});
+ 		print("local files not in remote: $_\n") for(@{$ra_lfnir});
  		}
- 	$self->StoreFiles($ref_a_new_local_files);
- 	my $ref_a_new_local_dirs = $self->LocalNotInRemote(
- 		$ref_h_local_dirs,
- 		$ref_h_remote_dirs
- 		);
+ 	$self->StoreFiles($ra_lfnir);
+ 	my $ra_mlf = $self->CheckIfModified($rh_lf);
  	if($self->{_debug})
  		{
- 		print("local directories not in remote : $_\n") for(@{$ref_a_new_local_dirs});
+ 		print("modified files : $_\n") for(@{$ra_mlf});
  		}
- 	$self->MakeDirs($ref_a_new_local_dirs);
+	$self->StoreFiles($ra_mlf);
  	if($self->{_delete} eq "enable")
  		{
- 		my $ref_a_deleted_local_files = $self->RemoteNotInLocal(
- 			$ref_h_local_files,
- 			$ref_h_remote_files
- 			);
+ 		my $ra_rfnil = $self->RemoteNotInLocal($rh_lf, $rh_rf);
  		if($self->{_debug})
  			{
- 			print("remote files not in local : $_\n") for(@{$ref_a_deleted_local_files});
+ 			print("remote files not in local : $_\n") for(@{$ra_rfnil});
  			}
-  		$self->DeleteFiles($ref_a_deleted_local_files);
- 		my $ref_a_deleted_local_dirs = $self->RemoteNotInLocal(
- 			$ref_h_local_dirs,
- 			$ref_h_remote_dirs);
+  		$self->DeleteFiles($ra_rfnil);
+ 		my $ra_rdnil = $self->RemoteNotInLocal($rh_ld, $rh_rd);
  		if($self->{_debug})
  			{
- 			print("remote directories not in local : $_\n") for(@{$ref_a_deleted_local_dirs});
+ 			print("remote directories not in local : $_\n") for(@{$ra_rdnil});
  			}
- 		$self->RemoveDirs($ref_a_deleted_local_dirs);
+ 		$self->RemoveDirs($ra_rdnil);
  		}
  	$self->Quit();
  	return(1);
@@ -108,44 +96,36 @@
 #-------------------------------------------------
  sub CheckIfModified
  	{
- 	my ($self, $ref_h_local_files) = @_;
- 	my @modified_files;
- 	for(keys(%{$ref_h_local_files}))
+ 	my ($self, $rh_lf) = @_;
+ 	my @mf;
+ 	for my $lf (keys(%{$rh_lf}))
  		{
- 		next if((-d $_) || !(-f $_));
- 		if(defined($self->{_last_modified}{$_}))
+ 		next unless(-f $lf);
+ 		if(defined($self->{_last_modified}{$lf}))
  			{
- 			next if($self->{_last_modified}{$_} eq (stat($_))[9]);
+ 			next if($self->{_last_modified}{$lf} eq (stat($lf))[9]);
  			}
- 		 push(@modified_files, $_);
+ 		push(@mf, $lf);
  		}
- 	return(\@modified_files);
+ 	return(\@mf);
  	}
 #-------------------------------------------------
 sub StoreFiles
  	{
- 	my ($self, $ref_a_files) = @_;
- 	return(0) if(!$self->IsConnection() or !@{$ref_a_files});
- 	my ($l_path, $r_path);
- 	for(@{$ref_a_files})
+ 	my ($self, $ra_lf) = @_;
+ 	return(0) unless($self->IsConnection() and @{$ra_lf});
+ 	my ($rf, $rn, $rd, $rs);
+ 	for my $lf (@{$ra_lf})
  		{
- 		if(-f $_)
+ 		if(-f $lf)
  			{
- 			$r_path = $l_path = $_;
- 			$r_path =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
- 			my ($r_name, $r_dir, $r_sufix) = fileparse($r_path);
- 			if(!($self->{_connection}->cwd($r_dir)))
- 				{
- 				$self->{_connection}->cwd();
- 				$self->{_connection}->mkdir($r_dir, 1);
- 				$self->{_connection}->cwd($r_dir);
- 				}
- $self->{_last_modified}{$l_path} = (stat($l_path))[9] if($self->{_connection}->put($l_path, $r_name));
- 			$self->{_connection}->cwd();
+ 			$rf = $lf;
+ 			$rf =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
+ $self->{_last_modified}{$lf} = (stat($lf))[9] if($self->{_connection}->put($lf, $rf));
  			}
  		else
  			{
- 			warn("error in StoreFiles() : $_ is not a file\n");
+ 			warn("error in StoreFiles() : $lf is not a local file\n");
  			}
  		}
  	store($self->{_last_modified}, $self->{_filename});
@@ -154,20 +134,18 @@ sub StoreFiles
 #-------------------------------------------------
  sub MakeDirs
  	{
- 	my ($self, $ref_a_dirs) = @_;
- 	return(0) if(!$self->IsConnection() or !@{$ref_a_dirs});
- 	for my $r_dir (@{$ref_a_dirs})
+ 	my ($self, $ra_ld) = @_;
+ 	return(0) unless($self->IsConnection() and @{$ra_ld});
+ 	for my $ld (@{$ra_ld})
  		{
- 		if(-d $r_dir)
+ 		if(-d $ld)
  			{
- 			$r_dir =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
- 			next if($self->{_connection}->cwd($r_dir));
- 			$self->{_connection}->cwd();
- 			$self->{_connection}->mkdir($r_dir, 1) ;
+ 			$ld =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
+ 			$self->{_connection}->mkdir($ld, 1) ;
  			}
  		else
  			{
-			warn("error in MakeDirs() : $r_dir is not a directory\n");
+			warn("error in MakeDirs() : $ld is not a local directory\n");
  			}
  		}
  	return(1);
@@ -175,13 +153,17 @@ sub StoreFiles
 #-------------------------------------------------
  sub DeleteFiles
  	{
- 	my ($self, $ref_a_files) = @_;
-	return(0) if(($self->{_delete} ne "enable") or !$self->IsConnection() or !@{$ref_a_files});
- 	for my $l_path (@{$ref_a_files})
+ 	my ($self, $ra_rf) = @_;
+	return(0) unless(
+ 		($self->{_delete} eq "enable")	and 
+ 		$self->IsConnection()		and 
+ 		@{$ra_rf}
+ 		);
+ 	for my $rf (@{$ra_rf})
  		{
-		$self->{_connection}->delete($l_path);
- 		$l_path =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
- 		delete($self->{_last_modified}{$l_path}) if(defined($self->{_last_modified}{$l_path}));
+		$self->{_connection}->delete($rf);
+ 		$rf =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
+ 		delete($self->{_last_modified}{$rf}) if(defined($self->{_last_modified}{$rf}));
  		}
  	store($self->{_last_modified}, $self->{_file_name});
  	return(1);
@@ -189,9 +171,13 @@ sub StoreFiles
 #-------------------------------------------------
  sub RemoveDirs
  	{
- 	my ($self, $ref_a_dirs) = @_;
-	return(0) if(($self->{_delete} ne "enable") or !$self->IsConnection() or !@{$ref_a_dirs});
- 	$self->{_connection}->rmdir($_, 1) for(@{$ref_a_dirs});
+ 	my ($self, $ra_rd) = @_;
+	return(0) unless(
+ 		($self->{_delete} eq "enable")	and
+ 		$self->IsConnection()		and
+ 		@{$ra_rd}
+ 		);
+ 	$self->{_connection}->rmdir($_, 1) for(@{$ra_rd});
  	return(1);
  	}
 #------------------------------------------------
@@ -242,7 +228,8 @@ Net::UploadMirror - Perl extension for mirroring a local directory via FTP to th
 
 This module is for mirroring a local directory to a remote location via FTP.
 For example websites, documentations or developmentstuff which ones were
-worked on locally. It is not developt for mirroring large archivs.
+worked on locally. Remote files on the ftp-server will be overwritten,
+also in case they are newer. It is not developt for mirroring large archivs.
 But there are not in principle any limits.
 
 =head1 Constructor and Initialization
@@ -302,7 +289,6 @@ http://www.planet-interkom.de/t.knorr/index.html
 
 Net::MirrorDir
 Storable
-File::Basename
 
 =head1 BUGS
 
@@ -326,5 +312,4 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
-
 
