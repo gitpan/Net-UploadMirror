@@ -25,12 +25,12 @@
 #-------------------------------------------------
  package Net::UploadMirror;
 #-------------------------------------------------
- use Net::MirrorDir 0.17;
+ use Net::MirrorDir 0.18;
  use Storable;
  use vars '$AUTOLOAD';
 #------------------------------------------------
  @Net::UploadMirror::ISA = qw(Net::MirrorDir);
- $Net::UploadMirror::VERSION = '0.10';
+ $Net::UploadMirror::VERSION = '0.11';
 #-------------------------------------------------
  sub _Init
  	{
@@ -41,7 +41,7 @@
  	return(1);
  	}
 #-------------------------------------------------
- sub Update
+ sub Upload
  	{
  	my ($self) = @_;
  	return(0) unless($self->Connect());
@@ -113,8 +113,8 @@
 sub StoreFiles
  	{
  	my ($self, $ra_lf) = @_;
- 	return(0) unless($self->IsConnection() and @{$ra_lf});
- 	my ($rf, $rn, $rd, $rs);
+ 	return(0) unless(@{$ra_lf} && $self->IsConnection());
+ 	my $rf;
  	for my $lf (@{$ra_lf})
  		{
  		if(-f $lf)
@@ -130,12 +130,12 @@ sub StoreFiles
  		}
  	store($self->{_last_modified}, $self->{_filename});
  	return(1);
- 	}
+ 	}	
 #-------------------------------------------------
  sub MakeDirs
  	{
  	my ($self, $ra_ld) = @_;
- 	return(0) unless($self->IsConnection() and @{$ra_ld});
+ 	return(0) unless(@{$ra_ld} && $self->IsConnection());
  	for my $ld (@{$ra_ld})
  		{
  		if(-d $ld)
@@ -155,17 +155,19 @@ sub StoreFiles
  	{
  	my ($self, $ra_rf) = @_;
 	return(0) unless(
- 		($self->{_delete} eq "enable")	and 
- 		$self->IsConnection()		and 
- 		@{$ra_rf}
+ 		@{$ra_rf} &&
+ 		($self->{_delete} eq "enable") &&
+ 		$self->IsConnection()
  		);
+	my $lf;
  	for my $rf (@{$ra_rf})
  		{
+		$lf = $rf;
 		$self->{_connection}->delete($rf);
- 		$rf =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
- 		delete($self->{_last_modified}{$rf}) if(defined($self->{_last_modified}{$rf}));
+ 		$lf =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
+ 		delete($self->{_last_modified}{$lf}) if(defined($self->{_last_modified}{$lf}));
  		}
- 	store($self->{_last_modified}, $self->{_file_name});
+ 	store($self->{_last_modified}, $self->{_filename});
  	return(1);
  	}
 #-------------------------------------------------
@@ -173,9 +175,9 @@ sub StoreFiles
  	{
  	my ($self, $ra_rd) = @_;
 	return(0) unless(
- 		($self->{_delete} eq "enable")	and
- 		$self->IsConnection()		and
- 		@{$ra_rd}
+ 		@{$ra_rd} &&
+ 		($self->{_delete} eq "enable") &&
+ 		$self->IsConnection()
  		);
  	$self->{_connection}->rmdir($_, 1) for(@{$ra_rd});
  	return(1);
@@ -197,7 +199,7 @@ Net::UploadMirror - Perl extension for mirroring a local directory via FTP to th
  	usr		=> "my_ftp_usr_name",
  	pass		=> "my_ftp_password",
  	);
- $um->Update();
+ $um->Upload();
  
  or more detailed
  my $md = Net::UploadMirror->new(
@@ -222,7 +224,7 @@ Net::UploadMirror - Perl extension for mirroring a local directory via FTP to th
 # 	subset		=> {qr/(?i:HOME)(?i:PAGE)?/, $regex]
  	filename	=> "modified_times"
  	);
- $um->Update();
+ $um->Upload();
 
 =head1 DESCRIPTION
 
@@ -244,7 +246,7 @@ But there are not in principle any limits.
  This function is called by the constructor.
  You do not need to call this function by yourself.
 
-=item (1|0)Update(void)
+=item (1|0)Upload(void)
  Call this function for mirroring automatically, recommended!!!
 
 =item (ref_hash_modified_files)CheckIfModified(ref_list_local_files)
@@ -266,7 +268,7 @@ But there are not in principle any limits.
 
 =head2 optional optiones
 
-=item file_name
+=item filename
  The name of the file in which the last modified times will be stored.
  default = "lastmodified_local"
 

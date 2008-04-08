@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::UploadMirror.
 
+0.11 Sun Apr  6 14:33:27 2008 
+ 	- change the function Update() to Upload()
+ 	- change the parameter check 
+
 0.10 Sat Mar 29 13:57:38 2008 
 	- skip tests with user prompt, if $ENV{AUTOMATED_TESTING} is true
  	- improvement of the function CheckIfModified()
@@ -47,6 +51,9 @@ Revision history for Perl extension Net::UploadMirror.
 	- original version; created by h2xs 1.23 with options
 		-XAn Net::UploadMirror
 		
+
+
+
 
 
 

@@ -76,7 +76,7 @@ BEGIN { use_ok('Net::UploadMirror') };
 #-------------------------------------------------
 # now we test the Net::UploadMirror methods
  isa_ok($mirror, "Net::UploadMirror");
- can_ok($mirror, "Update");
+ can_ok($mirror, "Upload");
  can_ok($mirror, "_Init");
  ok($mirror->_Init());
  can_ok($mirror, "StoreFiles");
@@ -129,8 +129,9 @@ BEGIN { use_ok('Net::UploadMirror') };
  		filename		=> "mtimes",
  		timeout		=> 5
  		));
- 	ok($m->Update());
+ 	ok($m->Upload());
  	select($oldfh);
  	}
 #-------------------------------------------------
+
 
