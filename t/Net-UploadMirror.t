@@ -18,7 +18,7 @@ BEGIN { use_ok('Net::UploadMirror') };
  	localdir		=> "TestA",
  	remotedir	=> "TestD",
  	ftpserver		=> "www.net.de",
- 	usr		=> 'e-mail@address.de',
+ 	user		=> 'e-mail@address.de',
  	pass		=> "xyz", 	
  	);
 #-------------------------------------------------
@@ -124,7 +124,7 @@ BEGIN { use_ok('Net::UploadMirror') };
  		localdir		=> $l,
  		remotedir	=> $r,
  		ftpserver		=> $s,
- 		usr		=> $u,
+ 		user		=> $u,
  		pass		=> $p,
  		filename		=> "mtimes",
  		timeout		=> 5
@@ -133,5 +133,3 @@ BEGIN { use_ok('Net::UploadMirror') };
  	select($oldfh);
  	}
 #-------------------------------------------------
-
-
